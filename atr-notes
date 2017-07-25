@@ -1,0 +1,41 @@
+http://tutorials.jenkov.com/java-performance/jmh.html
+
+There are multiple modes
+Throughput	Measures the number of operations per second, meaning the number of times per second your benchmark method could be executed.
+Average Time	Measures the average time it takes for the benchmark method to execute (a single execution).
+Sample Time	Measures how long time it takes for the benchmark method to execute, including max, min time etc.
+Single Shot Time	Measures how long time a single benchmark method execution takes to run. This is good to test how it performs under a cold start (no JVM warm up).
+All	Measures all of the above.
+
+
+Q: how to find which benchmark to run?
+see -h with the help you can pass regex string
+
+Q: Reduce number of iteration and warmup?
+see -h with -wi and -i and -f flags
+
+Example :
+java -jar ./target/atrbench-uber.jar copyMethod -wi 0 -f 1 -i 3 -bm avgt -prof stack
+
+It also has a profiler to see which functions took the time.
+
+In order to use the profiler, one needs to
+
+# echo -1 >  /proc/sys/kernel/perf_event_paranoid
+
+Documentation:
+  -1: Allow use of (almost) all events by all users
+>= 0: Disallow raw tracepoint access by users without CAP_IOC_LOCK
+>= 1: Disallow CPU event access by users without CAP_SYS_ADMIN
+>= 2: Disallow kernel profiling by users without CAP_SYS_ADMIN
+
+Q: Where is the generated souce code?
+The generated code target/generated-sources/annotations/.../
+
+Q: Can we mark the class which has the benchmark function?
+A: Yes, we can :
+http://hg.openjdk.java.net/code-tools/jmh/file/a128fd4a5901/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_04_DefaultState.java
+@State(Scope.Thread)
+public class Your_CLASS {
+
+Q: 
