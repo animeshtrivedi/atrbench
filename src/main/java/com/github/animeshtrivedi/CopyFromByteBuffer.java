@@ -14,15 +14,23 @@ public class CopyFromByteBuffer {
     * We need to make sure atleast more than the cache size memory footprint
     * say 1GB = 1024 x 1 MB buffers
     */
-    int footprint = 1 << 30; // we need to ensure a footprint of 1 GB to avoid caching effect
+    // we need to ensure a footprint of 1 GB to avoid caching effect
+    int footprintLarge = 1 << 30;
     /* size is a variable */
     @Param({"1024", "65536", "524288", "1048576", "8388608"})
     int size;
     @Param({"heap", "direct"})
     String mode;
+
+    @Param({"small", "large"})
+    String footPrintSrc;
+
+    @Param({"small", "large"})
+    String footPrintSink;
+
     /* count we will calculate */
-    int count;
-    int index;
+    int countSrc, countSink;
+    int indexSrc, indexSink;
 
     ByteBuffer[] bbArrary;
     byte[][] byteArray;
@@ -30,40 +38,61 @@ public class CopyFromByteBuffer {
     public CopyFromByteBuffer(){
     }
 
-    private void init(){
-        count = footprint / size;
-        index = 0;
-
-        bbArrary = new ByteBuffer[count];
-        byteArray = new byte[count][];
-
-        for (int i =0; i < count; i++){
+    private void initSrc(){
+        if(footPrintSrc.compareTo("small") == 0){
+            /* we just use one buffer that there is, to maximize the caching effect */
+            countSrc = 1;
+        } else {
+            /* otherwise 1GB size, divided by the current size */
+            countSrc = footprintLarge / size;
+        }
+        indexSrc = 0;
+        bbArrary = new ByteBuffer[countSrc];
+        for (int i =0; i < countSrc; i++){
             if(mode.compareTo("direct") == 0)
                 bbArrary[i] = ByteBuffer.allocateDirect(size);
             else
                 bbArrary[i] = ByteBuffer.allocate(size);
+        }
+    }
+
+    private void initSink(){
+        if(footPrintSink.compareTo("small") == 0){
+            /* we just use one buffer that there is, to maximize the caching effect */
+            countSink = 1;
+        } else {
+            /* otherwise 1GB size, divided by the current size */
+            countSink = footprintLarge / size;
+        }
+        indexSink = 0;
+        byteArray = new byte[countSink][];
+        for (int i =0; i < countSink; i++){
             byteArray[i] = new byte[size];
         }
-        System.out.println("\n size is " + size + " and count is " + count + " and mode is " + mode);
     }
 
     private void deInit(){
-        for (int i =0; i < count; i++){
+        for (int i =0; i < countSrc; i++)
             bbArrary[i] = null;
+        for (int i =0; i < countSink; i++)
             byteArray[i] = null;
-        }
 
         bbArrary = null;
         byteArray = null;
 
         size = -1;
-        count = -1;
-        index = -1;
+        countSrc = countSink = -1;
+        indexSrc = indexSink = -1;
     }
 
     @Setup(Level.Trial)
     public void doSetupTrail() {
-        init();
+        initSrc();
+        initSink();
+        System.out.println("\n size is " + size +
+                " and count (src,sink) is (" + countSrc + "," + countSink +
+                ") and mode is " + mode +
+                " and footprint (src, sink) is (" + footPrintSrc + "," +footPrintSink+")");
     }
 
     @TearDown(Level.Trial)
@@ -74,7 +103,8 @@ public class CopyFromByteBuffer {
     @Setup(Level.Iteration)
     public void doSetupIteration() {
         // we reset the index
-        index = 0;
+        indexSrc = 0;
+        indexSink = 0;
     }
 
     @TearDown(Level.Iteration)
@@ -83,11 +113,15 @@ public class CopyFromByteBuffer {
 
     @Setup(Level.Invocation)
     public void doSetupInvocation() {
-        index++;
-        if(index == count)
-            index = 0;
+        indexSrc++;
+        if(indexSrc == countSrc)
+            indexSrc = 0;
         // and we clear the buffer for that index
-        bbArrary[index].clear();
+        bbArrary[indexSrc].clear();
+
+        indexSink++;
+        if(indexSink == countSink)
+            indexSink = 0;
     }
 
     @TearDown(Level.Invocation)
@@ -97,6 +131,6 @@ public class CopyFromByteBuffer {
     @Benchmark   @BenchmarkMode(Mode.AverageTime)
     public void testCopyFromByteBuffer(CopyFromByteBuffer state) {
         /* we pick the current index and just operate on the index */
-        state.bbArrary[state.index].get(state.byteArray[state.index]);
+        state.bbArrary[state.indexSrc].get(state.byteArray[state.indexSink]);
     }
 }

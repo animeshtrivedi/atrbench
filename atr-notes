@@ -47,3 +47,10 @@ A: See @Param thing.
 http://hg.openjdk.java.net/code-tools/jmh/file/06c8e8aa576b/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_27_Params.java
 
 
+Q: What are the benchmarks I would like to have?
+- System.arraycopy
+- ByteBuffer get and put
+- ByteBuffer aligned and un-aligned
+- Kryo speeds with different data types
+- Parquet read and write performance
+-
