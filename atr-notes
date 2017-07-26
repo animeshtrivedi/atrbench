@@ -38,4 +38,12 @@ http://hg.openjdk.java.net/code-tools/jmh/file/a128fd4a5901/jmh-samples/src/main
 @State(Scope.Thread)
 public class Your_CLASS {
 
-Q: 
+Q: Between benchmark mode defined in the code as ""@Benchmark   @BenchmarkMode(Mode.AverageTime)" and what we can
+pass on the shell as -bm? which takes effect?
+A: -bm takes precedence
+
+Q: How to run for various values
+A: See @Param thing.
+http://hg.openjdk.java.net/code-tools/jmh/file/06c8e8aa576b/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_27_Params.java
+
+

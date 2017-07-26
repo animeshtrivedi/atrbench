@@ -5,26 +5,22 @@ package com.github.animeshtrivedi;
  */
 import org.openjdk.jmh.annotations.*;
 
-import java.nio.ByteBuffer;
-
-
-public class ArrayCopy {
+public class SkeletonCode {
 
     @State(Scope.Benchmark)
-    public static class ArrayCopyState {
-        int size = 1024 * 1024;
-        int count = 1024;
-        private ByteBuffer[] bbArray;
-        private byte[][] byteArray;
-        private int index;
+    public static class SkeletonState {
+        @Param({"1", "10000"})
+        public int index;
 
-        public ArrayCopyState(){
-            index = 0;
+        @Param({"5", "50000"})
+        public int index2;
+
+        public SkeletonState(){
         }
 
         @Setup(Level.Trial)
         public void doSetupTrail() {
-            System.out.println("Do per trail setup");
+            System.out.println("Do per trail setup, index is " + index);
         }
 
         @TearDown(Level.Trial)
@@ -51,20 +47,49 @@ public class ArrayCopy {
         public void dotearmDownInvocation() {
            System.out.println("\t\t Do per invokation teardown ");
         }
+
         public String toString(){
             return " index " + index;
         }
     }
 
     @Benchmark   @BenchmarkMode(Mode.AverageTime)
-    public void copyMethod(ArrayCopyState state) {
-        // This is a demo/sample template for building your JMH benchmarks. Edit as needed.
-        // Put your benchmark code here.
+    public void TestSkeletonCode(SkeletonState state) {
         System.out.println("\t\t\tBenchmark starts " + state);
         try {
-            Thread.sleep(100);
+            Thread.sleep(10);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 }
+
+//https://stackoverflow.com/questions/29472797/why-is-returning-a-java-object-reference-so-much-slower-than-returning-a-primiti
+//@BenchmarkMode(Mode.AverageTime)
+//@OutputTimeUnit(TimeUnit.NANOSECONDS)
+//@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+//@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+//@Fork(5)
+//public class PrimVsRef {
+//
+//    @Benchmark
+//    public void prim() {
+//        doPrim();
+//    }
+//
+//    @Benchmark
+//    public void ref() {
+//        doRef();
+//    }
+//
+//    @CompilerControl(CompilerControl.Mode.DONT_INLINE)
+//    private int doPrim() {
+//        return 42;
+//    }
+//
+//    @CompilerControl(CompilerControl.Mode.DONT_INLINE)
+//    private Object doRef() {
+//        return this;
+//    }
+//
+//}
