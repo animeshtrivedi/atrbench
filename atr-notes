@@ -53,4 +53,4 @@ Q: What are the benchmarks I would like to have?
 - ByteBuffer aligned and un-aligned
 - Kryo speeds with different data types
 - Parquet read and write performance
--
+- byte[] allocate rate
