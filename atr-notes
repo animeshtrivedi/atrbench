@@ -54,3 +54,9 @@ Q: What are the benchmarks I would like to have?
 - Kryo speeds with different data types
 - Parquet read and write performance
 - byte[] allocate rate
+
+November 29, 2017
+
+ http://java-performance.info/jmh/
+
+ What is the level of details: Invocation -> Iteration -> Trial
