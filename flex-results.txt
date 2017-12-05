@@ -1,0 +1,84 @@
+Benchmark                                    (dstBufferSize)  (srcBufferSize)   Mode  Cnt          Score           Error  Units
+SystemArrayCopyTest.testByteArrayAllocation                1          1048576  thrpt    3  509567557.538 ±  40791430.084  ops/s
+SystemArrayCopyTest.testByteArrayAllocation                2          1048576  thrpt    3  507170200.957 ±  25005571.346  ops/s
+SystemArrayCopyTest.testByteArrayAllocation                4          1048576  thrpt    3  517459701.235 ±   9432440.905  ops/s
+SystemArrayCopyTest.testByteArrayAllocation                8          1048576  thrpt    3  510324529.745 ±  31557316.690  ops/s
+SystemArrayCopyTest.testByteArrayAllocation               16          1048576  thrpt    3  497891338.396 ±  30514163.363  ops/s
+SystemArrayCopyTest.testByteArrayAllocation               32          1048576  thrpt    3  473302903.674 ±  21922740.194  ops/s
+SystemArrayCopyTest.testByteArrayAllocation              128          1048576  thrpt    3  432577810.069 ±  18147174.516  ops/s
+SystemArrayCopyTest.testByteArrayAllocation              256          1048576  thrpt    3  361069757.344 ±  21390767.370  ops/s
+SystemArrayCopyTest.testByteArrayAllocation              512          1048576  thrpt    3  242631977.549 ±   5326972.863  ops/s
+SystemArrayCopyTest.testByteArrayAllocation             1024          1048576  thrpt    3  172196715.045 ± 716827830.808  ops/s
+
+cat tmp | grep -v "Score" | awk '{ printf("size: %f bw=%f Gbps\n", $2, ($6*$2*8)/1000000000)}'
+
+These are 16 core results !
+size: 1.000000 bw=4.076540 Gbps
+size: 2.000000 bw=8.114723 Gbps
+size: 4.000000 bw=16.558710 Gbps
+size: 8.000000 bw=32.660770 Gbps
+size: 16.000000 bw=63.730091 Gbps <- here we are.
+
+[above 100 Gbps - at this point network is bottleneck]
+
+size: 32.000000 bw=121.165543 Gbps
+size: 128.000000 bw=442.959678 Gbps
+size: 256.000000 bw=739.470863 Gbps
+size: 512.000000 bw=993.820580 Gbps
+size: 1024.000000 bw=1410.635490 Gbps
+
+
+---
+Now what is the speed to int and long materialization? This is not yet conclusive as JMH results are an order
+of magnitude less than what I have in standalone benchmark.
+
+Ints = 650 Million => 20.8 Gbps
+Longs = 631 Millions => 40.3 Gbps
+Double = 604 Millions => 38.6 Gbps
+
+***********************************************************************************************************************
+
+November 30, revising these figures with a more optimized benchmark.
+
+java -jar ./atrbench-uber.jar SystemArray  -f 3 -i 5 -r 10s -gc true -wi 10 -t 16
+
+size: 1.000000 bw=11.507831 Gbps
+size: 2.000000 bw=22.553569 Gbps
+size: 4.000000 bw=45.750859 Gbps
+size: 8.000000 bw=92.172118 Gbps
+<- here is the network breaking point ->
+size: 16.000000 bw=173.149647 Gbps
+size: 32.000000 bw=351.405701 Gbps
+size: 128.000000 bw=1134.533105 Gbps
+
+***********************************************************************************************************************
+December 3, 2017
+
+Revisiting how fast can we make ints?
+
+java -jar ./atrbench-uber.jar MakeInt -f 1 -i 5 -r 10s -gc true -wi 10 -t 16
+x16 threads
+Ints = MakeInt.makeInts  thrpt    5  3,627,959,191.691 ± 53128849.101  ops/s => 116 Gbps (Good)
+Longs = MakeLong.makeLongs  thrpt    5  3,688,823,408.848 ± 72665918.374  ops/s => 236 Gbps (Good)
+Double = xxx
+
+
+***********************************************************************************************************************
+December 5th, 2017
+
+Now I tried it with 512MB area, so to see the effect of new data and caching
+
+Longs = MakeLong.makeLongs  thrpt    5  3,654,906,490.275 ± 153550070.690  ops/s
+
+So it stays the same. Interesting...
+
+if instead of the blackhole, I do sum then even more performance
+
+MakeLong.makeLongs  thrpt    5  7,085,952,546.753 ± 1051539.846  ops/s
+
+Is it due to unalign access?
+
+MakeLong.makeLongsUnalign  thrpt    5  6,655,478,636.833 ± 221155.825  ops/s
+
+It came down from 7 billion to 6.6, but still a huge performance.
+

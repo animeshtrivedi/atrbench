@@ -15,7 +15,7 @@ public class SystemArrayCopyTest {
     @Param({"1048576"})
     private int srcBufferSize;
 
-    @Param({"16"})
+    @Param({"1", "2", "4", "8", "16", "32", "128"}) //, "256", "512", "1024"})
     private int dstBufferSize;
 
     private byte[] srcBuffer, dstBuffer;
@@ -52,28 +52,29 @@ public class SystemArrayCopyTest {
     public void doTearDownIteration() {
         //System.out.println("\t[ITERATION-teardown] ");
     }
-
-    @Setup(Level.Invocation)
-    public void doSetupInvocation() {
-        currentSrcIndex+=dstBufferSize;
-        if((currentSrcIndex + dstBufferSize) > srcBufferSize )
-            currentSrcIndex = 0;
-        //System.out.println("\t\t [INVOCATION-setup] " + this.toString());
-    }
-
-    @TearDown(Level.Invocation)
-    public void dotearmDownInvocation() {
-        //System.out.println("\t\t [INVOCATION-teardown] ");
-    }
+//
+//    @Setup(Level.Invocation)
+//    public void doSetupInvocation() {
+//
+//        //System.out.println("\t\t [INVOCATION-setup] " + this.toString());
+//    }
+//
+//    @TearDown(Level.Invocation)
+//    public void dotearmDownInvocation() {
+//        //System.out.println("\t\t [INVOCATION-teardown] ");
+//    }
 
     public String toString(){
         return " srcSize: " + srcBufferSize + " dstSize: " + dstBufferSize + " srcIndex: " + currentSrcIndex +  " dstIndex: " + currentDstIndex;
     }
 
     @Benchmark   @BenchmarkMode(Mode.Throughput)
-    public void testByteArrayAllocation(Blackhole blackhole, SystemArrayCopyTest state) {
+    public void copyData(Blackhole blackhole, SystemArrayCopyTest state) {
         //System.out.println(this.toString());
         System.arraycopy(srcBuffer, currentSrcIndex, dstBuffer, currentDstIndex, dstBufferSize);
         blackhole.consume(srcBuffer);
+        currentSrcIndex+=dstBufferSize;
+        if((currentSrcIndex + dstBufferSize) > srcBufferSize )
+            currentSrcIndex = 0;
     }
 }
